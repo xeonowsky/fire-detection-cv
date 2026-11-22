@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/* Motyw wariantu D. Zmiana wariantu wizualnego = podmiana tego bloku. */
+@theme {
+  --color-ink: #000000;
+  --color-paper: #f7f5f2;
+  --color-cream: #f5f1ea;
+  --color-surface-dark: #0b0b0b;
+
+  --color-fire: #ff5b14;
+  --color-fire-hover: #ff7a3d;
+  --color-fire-strong: #c2410c;
+  --color-fire-deep: #9a3412;
+  --color-fire-soft: #fff4ee;
+
+  --color-line: #e4e0da;
+  --color-line-dark: #2a2826;
+  --color-muted: #6b655d;
+  --color-muted-dark: #a8a39b;
+  --color-body: #3a3632;
+
+  --color-ok: #14532d;
+  --color-ok-soft: #e8f3ec;
+
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-firepulse: firepulse 1.4s ease-in-out infinite;
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes firepulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 2px #ff5b14,
+        0 0 18px 3px rgb(255 91 20 / 0.55);
+    }
+    50% {
+      box-shadow:
+        0 0 0 2px #ff7a3d,
+        0 0 36px 9px rgb(255 91 20 / 0.8);
+    }
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-fire);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-firepulse {
+    animation: none;
+  }
+}

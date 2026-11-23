@@ -41,7 +41,7 @@ export function Logo({ href = ROUTES.home, tone = "light", className }: LogoProp
           tone === "light" ? "bg-ink text-fire" : "bg-fire text-ink",
         )}
       >
-        <FlameIcon className="size-[18px]" />
+        <FlameIcon className="size-4.5" />
       </span>
       <span className="text-[19px] tracking-tight">
         <span className="font-normal">fire</span>

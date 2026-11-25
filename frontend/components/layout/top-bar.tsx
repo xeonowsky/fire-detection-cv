@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { MainNav, MainNavFallback } from "@/components/layout/main-nav";
-import { UserMenu } from "@/components/layout/user-menu";
+import { UserMenu, UserMenuFallback } from "@/components/layout/user-menu";
+import { getCurrentUser } from "@/lib/api/server";
 import { ROUTES } from "@/lib/routes";
+import { initialsOf } from "@/lib/user";
 
 export function TopBar() {
   return (
@@ -12,8 +14,15 @@ export function TopBar() {
         <Suspense fallback={<MainNavFallback />}>
           <MainNav />
         </Suspense>
-        <UserMenu />
+        <Suspense fallback={<UserMenuFallback />}>
+          <CurrentUserMenu />
+        </Suspense>
       </div>
     </header>
   );
+}
+
+async function CurrentUserMenu() {
+  const user = await getCurrentUser();
+  return <UserMenu initials={initialsOf(user.name)} name={user.name} />;
 }

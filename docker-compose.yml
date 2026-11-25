@@ -1,13 +1,21 @@
 services:
   api:
-    build: ./backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app --reload-dir /ml
     ports:
       - "8000:8000"
     env_file: ./backend/.env
+    environment:
+      # Pakiet ml/firedetector_ml importowany przez backend (też gdy obraz jest starszy niż Dockerfile).
+      PYTHONPATH: /ml
     volumes:
       - ./backend:/app
+      - ./ml:/ml
       - appdata:/data
+      - models:/root/.cache/huggingface
 
 volumes:
   appdata:
+  models:

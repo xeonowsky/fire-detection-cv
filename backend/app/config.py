@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +16,9 @@ class Settings(BaseSettings):
     max_video_seconds: int = 270
     max_video_megabytes: int = 1024
     allowed_video_extensions: tuple[str, ...] = (".mp4", ".mov", ".avi")
+    # demo: przykładowy wynik bez modelu; model: Grounding DINO z pakietu ml/firedetector_ml
+    analysis_engine: Literal["demo", "model"] = "demo"
+    analysis_max_frames: int = 120
     demo_analysis_seconds: int = 20
 
     @property

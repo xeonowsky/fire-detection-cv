@@ -1,0 +1,12 @@
+# Kontekst budowania to katalog główny repo; do obrazu trafiają tylko backend/ i ml/.
+*
+!backend/
+!ml/
+backend/.env
+backend/.venv/
+ml/samples/
+**/__pycache__/
+**/*.pyc
+**/.idea/
+**/.ruff_cache/
+ml/research/

@@ -1,17 +1,39 @@
+# Reguły frontendu (node_modules, .next, .env*) są w frontend/.gitignore.
+
 # Sekrety
 .env
+.env.*
 !.env.example
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
 venv/
+.ruff_cache/
+.pytest_cache/
+
+# Dane lokalne: baza, filmy, wagi modeli, wyniki eksperymentów
+*.db
+*.sqlite3
+*.avi
+*.mp4
+*.mov
+*.mkv
+*.pt
+*.pth
+*.onnx
+*.safetensors
+ml/samples/
+ml/outputs/
+/data/
 
 # IDE
 .idea/
 .vscode/
+*.iml
 
 # System
 .DS_Store
 Thumbs.db
+desktop.ini

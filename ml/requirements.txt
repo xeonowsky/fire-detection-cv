@@ -1,0 +1,6 @@
+# torch instaluj osobno w wersji CPU (mniejsza i bez CUDA):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+transformers>=4.56  # 4.56+: Sam2Model dla trybu sam2
+numpy
+pillow
+opencv-python-headless

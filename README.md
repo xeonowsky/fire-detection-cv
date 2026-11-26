@@ -9,13 +9,20 @@ Projekt jest MVP do prezentacji: celowo prosty stos, jeden kontener z API i baza
 ## Struktura repozytorium
 
 ```
-frontend/                    Next.js 16 — strona, logowanie, pulpit, analizy, ustawienia (port 3000)
-backend/                     FastAPI — konta, upload filmów, analiza w tle, SQLite (port 8000, Docker)
-firedetectoraialgorithms/    skrypty ML: przygotowanie danych i fine-tuning DINOv3
-load_dataset.py              skrypty ML (pobranie zbioru danych)
-test_dinov3.py               skrypty ML (test modelu DINOv3)
-docker-compose.yml           uruchamia backend
+fire-detection-cv/
+├─ frontend/              Next.js 16 — strona, logowanie, pulpit, analizy, ustawienia (port 3000)
+├─ backend/               FastAPI — konta, upload filmów, analiza w tle, SQLite (port 8000, Docker)
+├─ ml/
+│  ├─ firedetector_ml/    pakiet używany przez backend: analyze() → werdykt + ramki ognia i dymu
+│  ├─ scripts/            narzędzia uruchamiane ręcznie (benchmark CPU)
+│  └─ research/           eksperymenty: Grounded SAM 2, klasyfikacja DINOv3, przygotowanie zbioru danych
+├─ docker-compose.yml     uruchamia backend razem z ml/
+├─ .gitattributes         końce linii LF w całym repo
+└─ .editorconfig          wspólne wcięcia i kodowanie dla edytorów
 ```
+
+Każdy folder ma własne README: [frontend](frontend/README.md), [backend](backend/README.md), [ml](ml/README.md),
+[ml/research](ml/research/README.md).
 
 ## Jak to działa
 
@@ -31,8 +38,8 @@ przeglądarka ──► frontend (Next.js, :3000) ──► API (FastAPI, :8000/
 3. Frontend odpytuje `GET /api/v1/analyses/{id}`, aż status będzie `done` albo `failed`.
 4. Wynik zawiera werdykt, poziom ryzyka, pewność i `detections_track`, czyli ramki ognia i dymu w czasie.
 
-Na razie analiza jest demonstracyjna (`backend/app/analysis.py` zwraca przykładowy wynik po ok. 20 s). W tym miejscu zostanie
-podpięty model zespołu ML (DINOv3 + object tracking, ONNX Runtime na CPU).
+Analizę wykonuje pakiet `ml/firedetector_ml` (Grounding DINO + śledzenie obiektów, CPU). Ustawienie
+`ANALYSIS_ENGINE=demo` w `backend/.env` przełącza na przykładowy wynik bez modelu.
 
 ## Uruchomienie
 
@@ -51,7 +58,8 @@ docker compose up --build
 - Healthcheck: http://localhost:8000/api/v1/health
 
 Kod backendu jest zamontowany w kontenerze, a Uvicorn działa z `--reload`, więc zmiany w `backend/app` wczytują się
-bez przebudowy. Przebudowa (`--build`) jest potrzebna tylko po zmianie `requirements.txt` albo `Dockerfile`.
+bez przebudowy. Przebudowa (`--build`) jest potrzebna tylko po zmianie `requirements.txt` albo `Dockerfile`. Pierwsze
+budowanie trwa kilka minut (torch), a pierwsza analiza pobiera model (ok. 700 MB) — kolejne są szybkie.
 
 ### 2. Frontend (lokalnie)
 
@@ -76,21 +84,20 @@ Aplikacja: http://localhost:3000
 
 ## Stan prac
 
-| Obszar                         | Stan                                                          |
-| ------------------------------ | ------------------------------------------------------------- |
-| Frontend: strony i komponenty  | gotowe (strona główna, auth, pulpit, ustawienia, podstrony)   |
-| Backend: konta, analizy, pliki | gotowe, przetestowane                                         |
-| Połączenie frontendu z API     | do zrobienia — frontend używa jeszcze danych demonstracyjnych |
-| Upload i status analizy        | do zrobienia                                                  |
-| Odtwarzacz z nakładką detekcji | do zrobienia                                                  |
-| Model ML                       | w trakcie (DINOv3, tracking, eksport do ONNX)                 |
+| Obszar                         | Stan                                                             |
+| ------------------------------ | ---------------------------------------------------------------- |
+| Frontend: strony i komponenty  | gotowe (strona główna, auth, pulpit, ustawienia, podstrony)      |
+| Backend: konta, analizy, pliki | gotowe, przetestowane                                            |
+| Połączenie frontendu z API     | gotowe: logowanie, rejestracja, pulpit, ustawienia               |
+| Upload i status analizy        | gotowe: przeciąganie lub wybór pliku, postęp wysyłania i analizy |
+| Odtwarzacz z nakładką detekcji | gotowe: ramki na żywo, oś czasu, statystyki, lista obiektów      |
+| Model ML                       | podpięty (Grounding DINO); do zmierzenia czas na CPU             |
 
 ## Sposób pracy
 
 - `main` zawsze działa. Każda zmiana na osobnym branchu (`feat/…`, `fix/…`, `ml/…`, `chore/…`) i przez Pull Request.
-- Sekretów nie commitujemy: `backend/.env` i `frontend/.env.local` są w `.gitignore`, w repo tylko `.env.example`.
-
-Szczegóły: [frontend/README.md](frontend/README.md), [backend/README.md](backend/README.md).
+- Nazwy commitów według [Conventional Commits](https://www.conventionalcommits.org/): `feat(frontend): …`, `fix(backend): …`, `chore: …`.
+- Sekretów nie commitujemy: `backend/.env` i `frontend/.env.local` są w `.gitignore`, w repo tylko `.env.example`. Filmów i wag modeli też nie — trzymamy je lokalnie w `ml/samples/`.
 
 ## Licencja
 

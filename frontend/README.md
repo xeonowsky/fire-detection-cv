@@ -81,10 +81,10 @@ proxy.ts               ochrona tras (w Next.js 16 dawne middleware.ts)
 
 Krok 1 (strony i komponenty) jest gotowy. Kolejne:
 
-- **Krok 2:** klient API z tokenem Bearer, zamiana `demo-data.ts` na `GET /users/me` i `GET /analyses`.
-- **Krok 3:** prawdziwe logowanie, rejestracja i zapisy w ustawieniach.
-- **Krok 4:** upload filmu i podgląd postępu analizy.
-- **Krok 5:** odtwarzacz z nakładką detekcji (`detections_track`).
+- ~~**Krok 2:** klient API z tokenem Bearer, zamiana `demo-data.ts` na `GET /users/me` i `GET /analyses`.~~ gotowe
+- ~~**Krok 3:** prawdziwe logowanie, rejestracja i zapisy w ustawieniach.~~ gotowe
+- ~~**Krok 4:** upload filmu i podgląd postępu analizy.~~ gotowe (`components/analysis/upload-panel.tsx`)
+- ~~**Krok 5:** odtwarzacz z nakładką detekcji (`detections_track`).~~ gotowe (`components/analysis/result/`)
 - **Krok 6:** historia analiz i dopracowanie strony głównej.
 
 Miejsca do zmiany są oznaczone w kodzie jako `TODO(krok N)`.

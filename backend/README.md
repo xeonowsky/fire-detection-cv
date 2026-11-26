@@ -29,14 +29,16 @@ W Swaggerze: zarejestruj się albo zaloguj, skopiuj `access_token`, kliknij **Au
 
 ## Zmienne środowiskowe (`.env`)
 
-| Zmienna                 | Domyślnie                | Opis                                                  |
-| ----------------------- | ------------------------ | ----------------------------------------------------- |
-| `JWT_SECRET`            | — (wymagana)             | klucz do podpisywania tokenów; długi losowy ciąg      |
-| `JWT_EXPIRE_MINUTES`    | `1440`                   | ważność tokena w minutach (24 h)                      |
-| `DATA_DIR`              | `/data`                  | katalog na dane; filmy trafiają do `DATA_DIR/uploads` |
-| `DATABASE_URL`          | `sqlite:////data/app.db` | adres bazy                                            |
-| `CORS_ORIGINS`          | `http://localhost:3000`  | dozwolone adresy frontendu, rozdzielone przecinkami   |
-| `DEMO_ANALYSIS_SECONDS` | `20`                     | czas trwania analizy demonstracyjnej                  |
+| Zmienna                 | Domyślnie                | Opis                                                                    |
+| ----------------------- | ------------------------ | ----------------------------------------------------------------------- |
+| `JWT_SECRET`            | — (wymagana)             | klucz do podpisywania tokenów; długi losowy ciąg                        |
+| `JWT_EXPIRE_MINUTES`    | `1440`                   | ważność tokena w minutach (24 h)                                        |
+| `DATA_DIR`              | `/data`                  | katalog na dane; filmy trafiają do `DATA_DIR/uploads`                   |
+| `DATABASE_URL`          | `sqlite:////data/app.db` | adres bazy                                                              |
+| `CORS_ORIGINS`          | `http://localhost:3000`  | dozwolone adresy frontendu, rozdzielone przecinkami                     |
+| `ANALYSIS_ENGINE`       | `demo`                   | `model` = Grounding DINO z `ml/`, `demo` = przykładowy wynik bez modelu |
+| `ANALYSIS_MAX_FRAMES`   | `120`                    | maks. liczba analizowanych klatek na film (wpływa na czas analizy)      |
+| `DEMO_ANALYSIS_SECONDS` | `20`                     | czas trwania analizy w trybie `demo`                                    |
 
 Losowy `JWT_SECRET`: `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 
@@ -123,24 +125,21 @@ app/
   security.py      hashowanie haseł, JWT, zależność CurrentUser
   video.py         długość filmu przez ffprobe
   storage.py       usuwanie plików filmów
-  analysis.py      analiza w tle — tu podpinamy model ML
+  analysis.py      analiza w tle: model z ml/ albo tryb demo
   routers/
     auth.py        rejestracja, logowanie, konto
     analyses.py    upload, lista, szczegóły, usuwanie, film
 ```
 
-## Podpięcie modelu ML
+## Model ML
 
-Analiza jest na razie demonstracyjna: `_demo_analysis` w `app/analysis.py` po `DEMO_ANALYSIS_SECONDS` zwraca
-przykładowy wynik. Model zespołu ML ma udostępnić funkcję:
+Przy `ANALYSIS_ENGINE=model` analiza wywołuje `analyze()` z pakietu [`ml/firedetector_ml`](../ml/README.md)
+(Grounding DINO + śledzenie obiektów) i zapisuje postęp w bazie. Obraz Dockera budowany jest z katalogu głównego
+repo, bo zawiera `backend/` i `ml/`; torch instaluje się w wersji CPU.
 
-```python
-def analyze(video_path: str, on_progress: Callable[[int], None]) -> dict:
-    """Zwraca słownik w formacie `result` opisanym wyżej. on_progress(0–100) aktualizuje pasek postępu."""
-```
-
-i zastąpić wywołanie `_demo_analysis` (miejsce oznaczone `TODO(model)`). Zależności modelu (onnxruntime, opencv itp.)
-dopisujemy do `requirements.txt` i przebudowujemy obraz: `docker compose up --build`.
+- Pierwsza analiza pobiera model (ok. 700 MB) do wolumenu `models`, kolejne korzystają z kopii.
+- Analizy wykonują się po kolei: dwie naraz na CPU byłyby wolniejsze.
+- Tryb `demo` (`ANALYSIS_ENGINE=demo`) zwraca przykładowy wynik bez modelu — przydatny do pracy nad frontendem.
 
 ## Jakość kodu
 

@@ -1,11 +1,13 @@
 import math
 import time
+from pathlib import Path
 
 from sqlmodel import Session
 
 from app.config import settings
 from app.db import engine
 from app.models import Analysis, AnalysisStatus
+from app.video import make_browser_playable, read_duration_seconds
 
 PROGRESS_STEPS = 10
 SAMPLE_INTERVAL_S = 0.2
@@ -19,13 +21,26 @@ def run_analysis(analysis_id: str) -> None:
             return
         try:
             _set_status(session, analysis, AnalysisStatus.processing, progress=0)
-            # TODO(model): zamienić na analyze(video_path, on_progress) od zespołu ML.
-            result = _demo_analysis(session, analysis)
+            _ensure_playable(session, analysis)
+            if settings.analysis_engine == "model":
+                result = _model_analysis(session, analysis)
+            else:
+                result = _demo_analysis(session, analysis)
             analysis.result = result
             _set_status(session, analysis, AnalysisStatus.done, progress=100)
         except Exception as error:  # noqa: BLE001 - każdy błąd analizy ma trafić do użytkownika jako status
             analysis.error = f"Analiza nie powiodła się: {error}"
             _set_status(session, analysis, AnalysisStatus.failed, progress=analysis.progress)
+
+
+def _ensure_playable(session: Session, analysis: Analysis) -> None:
+    playable = make_browser_playable(Path(analysis.video_path))
+    if str(playable) == analysis.video_path:
+        return
+    analysis.video_path = str(playable)
+    analysis.duration_s = analysis.duration_s or read_duration_seconds(playable)
+    session.add(analysis)
+    session.commit()
 
 
 def _set_status(session: Session, analysis: Analysis, status: AnalysisStatus, progress: int) -> None:
@@ -34,6 +49,19 @@ def _set_status(session: Session, analysis: Analysis, status: AnalysisStatus, pr
     session.add(analysis)
     session.commit()
     session.refresh(analysis)
+
+
+def _model_analysis(session: Session, analysis: Analysis) -> dict:
+    # Import tutaj: torch i transformers ładują się tylko w trybie "model".
+    from firedetector_ml import analyze
+
+    def on_progress(progress: int) -> None:
+        if progress != analysis.progress:
+            analysis.progress = progress
+            session.add(analysis)
+            session.commit()
+
+    return analyze(analysis.video_path, on_progress, max_frames=settings.analysis_max_frames)
 
 
 def _demo_analysis(session: Session, analysis: Analysis) -> dict:

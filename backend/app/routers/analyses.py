@@ -132,4 +132,4 @@ def get_video(analysis_id: str, session: SessionDep) -> FileResponse:
     analysis = session.get(Analysis, analysis_id)
     if analysis is None or not Path(analysis.video_path).exists():
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Nie znaleziono filmu.")
-    return FileResponse(analysis.video_path, filename=analysis.original_filename)
+    return FileResponse(analysis.video_path, content_disposition_type="inline")

@@ -1,31 +1,43 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormFooter } from "@/components/settings/form-footer";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 import { useFlash } from "@/hooks/use-flash";
+import { withSession } from "@/lib/api/browser";
+import { toErrorMessage, usersApi } from "@/lib/api/client";
 import type { User } from "@/lib/api/types";
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
+import { initialsOf } from "@/lib/user";
 
 export function ProfileSection({ user }: { user: User }) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const { message, flash } = useFlash();
+  const router = useRouter();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // TODO(krok 3): PATCH /users/me
-    flash("Zapisano zmiany w profilu");
+    setError(null);
+    setPending(true);
+    try {
+      const saved = await withSession((token) =>
+        usersApi.update(token, { name: name.trim(), email: email.trim() }),
+      );
+      setName(saved.name);
+      setEmail(saved.email);
+      flash("Zapisano zmiany w profilu");
+      // Odświeża dane z serwera: inicjały w pasku i imię na pulpicie.
+      router.refresh();
+    } catch (saveError) {
+      setError(toErrorMessage(saveError));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -51,8 +63,8 @@ export function ProfileSection({ user }: { user: User }) {
             required
           />
         </div>
-        <FormFooter message={message}>
-          <Button type="submit" variant="dark">
+        <FormFooter message={message} error={error}>
+          <Button type="submit" variant="dark" disabled={pending}>
             Zapisz profil
           </Button>
         </FormFooter>

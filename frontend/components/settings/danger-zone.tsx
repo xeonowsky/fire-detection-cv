@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { useFlash } from "@/hooks/use-flash";
+import { withSession } from "@/lib/api/browser";
+import { analysesApi, toErrorMessage, usersApi } from "@/lib/api/client";
 import { endSession } from "@/lib/auth/session";
 import { ROUTES } from "@/lib/routes";
 
@@ -12,13 +14,36 @@ export function DangerZone({ email }: { email: string }) {
   const router = useRouter();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [typedEmail, setTypedEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const { message, flash } = useFlash(4000);
 
-  const deleteAccount = () => {
-    // TODO(krok 3): DELETE /users/me
-    endSession();
-    router.push(ROUTES.home);
+  const run = async (action: () => Promise<void>) => {
+    setError(null);
+    setPending(true);
+    try {
+      await action();
+    } catch (actionError) {
+      setError(toErrorMessage(actionError));
+    } finally {
+      setPending(false);
+    }
   };
+
+  const deleteAnalyses = () =>
+    run(async () => {
+      await withSession(analysesApi.removeAll);
+      flash("Usunięto wszystkie analizy");
+      router.refresh();
+    });
+
+  const deleteAccount = () =>
+    run(async () => {
+      await withSession(usersApi.remove);
+      endSession();
+      router.replace(ROUTES.home);
+      router.refresh();
+    });
 
   return (
     <section
@@ -35,8 +60,7 @@ export function DangerZone({ email }: { email: string }) {
           <p className="font-semibold">Usuń wszystkie analizy</p>
           <p className="text-sm text-body">Usuwa nagrania i wyniki. Konto zostaje.</p>
         </div>
-        {/* TODO(krok 3): DELETE /analyses */}
-        <Button variant="danger" onClick={() => flash("Usunięto wszystkie analizy")}>
+        <Button variant="danger" onClick={deleteAnalyses} disabled={pending}>
           Usuń analizy
         </Button>
       </div>
@@ -65,7 +89,7 @@ export function DangerZone({ email }: { email: string }) {
             <div className="flex flex-wrap gap-3">
               <Button
                 variant="danger"
-                disabled={typedEmail.trim().toLowerCase() !== email.toLowerCase()}
+                disabled={pending || typedEmail.trim().toLowerCase() !== email.toLowerCase()}
                 onClick={deleteAccount}
               >
                 Usuwam konto na zawsze
@@ -84,9 +108,15 @@ export function DangerZone({ email }: { email: string }) {
         ) : null}
       </div>
 
-      <p role="status" aria-live="polite" className="text-sm font-semibold text-fire-deep">
-        {message ?? ""}
-      </p>
+      {error ? (
+        <p role="alert" className="text-sm font-semibold text-fire-deep">
+          {error}
+        </p>
+      ) : (
+        <p role="status" aria-live="polite" className="text-sm font-semibold text-fire-deep">
+          {message ?? ""}
+        </p>
+      )}
     </section>
   );
 }

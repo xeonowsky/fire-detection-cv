@@ -14,5 +14,7 @@ export const ANALYSIS_LIMITS = {
   maxDurationSeconds: 270,
   maxDurationLabel: "4:30",
   maxProcessingMinutes: 2,
+  maxFileMegabytes: 1024,
   acceptedFormats: ["MP4", "MOV", "AVI"],
+  acceptedExtensions: [".mp4", ".mov", ".avi"],
 } as const;

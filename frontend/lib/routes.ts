@@ -3,6 +3,7 @@ export const ROUTES = {
   howItWorks: "/#jak",
   login: "/login",
   register: "/register",
+  logout: "/logout",
   forgotPassword: "/forgot-password",
   dashboard: "/dashboard",
   analyses: "/analyses",
